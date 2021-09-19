@@ -39,6 +39,9 @@ public class GamePanel : MonoBehaviour
     private int currentScore = 0;
     private int bestScore = 0;
 
+    public AudioSource gameMusic;
+    public AudioSource gameOverMusic;
+
     // restart
     public void OnRestartClick(){
         tilesPlayed = 0;
@@ -207,6 +210,8 @@ public void PlacePianoTile(int index){
                     if (i == row-1){
                         // you lose
                         Debug.Log("You Lose!");
+                        gameMusic.Stop();
+                        gameOverMusic.Play();
                         this.gameFinished = true;
                         if (bestScore < currentScore){
                             PlayerPrefs.SetInt(Const.BestScore,currentScore);
