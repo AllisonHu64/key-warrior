@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using System.Collections;
 
 public class GamePanel : MonoBehaviour
 {
@@ -23,6 +22,8 @@ public class GamePanel : MonoBehaviour
 
     private int col; // number of columns
 
+
+
     public GameObject tilePrefab;
     public GameObject pianoTilePrefab;
     public float timer = 1;
@@ -41,14 +42,26 @@ public class GamePanel : MonoBehaviour
 
     public AudioSource gameMusic;
     public AudioSource gameOverMusic;
+    public AudioSource tileClearSound;
 
+    //public AudioSource pressSource;
+    //public AudioClip pressClip;
+
+    private void Start()
+    {
+        gameMusic.volume = PlayerPrefs.GetFloat(Const.Music);
+        tileClearSound.volume = PlayerPrefs.GetFloat(Const.Sound);
+    }
     // restart
     public void OnRestartClick(){
+        gameMusic.Stop();
+        gameMusic.Play();
         tilesPlayed = 0;
         gameFinished = false;
         currentScore = 0;
         ClearAllPianoTiles();
         bestScore = PlayerPrefs.GetInt(Const.BestScore,0);
+        gameMusic.Play();
     }
 
     public void ClearAllPianoTiles(){
@@ -149,20 +162,26 @@ public int RandomizerProbability(){
     }
     else if(tilesPlayed < (60 / multiplier)){
         Debug.Log("medium");
-        speed = 0.5f;
+        speed = 0.85f;
         return probabilityGenrtr(1);
     }
-    else{
+    else if(tilesPlayed < (100/ multiplier)){
         Debug.Log("hard");
-        speed = 0.25f;
+        speed = 0.75f;
         return probabilityGenrtr(2);
+    }
+    else{
+        Debug.Log("hell");
+        speed = 0.5f;
+        return probabilityGenrtr(3);
     }
 }
 
 public int probabilityGenrtr(int level){
     int[] easy = {0,0,0,1,1,1,1,1,1,1};
     int[] medium = {0,0,1,1,1,1,1,2,2,0};
-    int[] hard = {0,0,0,1,1,1,1,2,2,3};
+    int[] hard = {0,0,0,1,1,1,1,2,3,3};
+    int[] hell = {1,1,2,2,2,2,3,3,3,3};
     if(level == 0){
         int tilesPerRowIndex = Random.Range(0, 10);  
         return easy[tilesPerRowIndex];
@@ -171,9 +190,13 @@ public int probabilityGenrtr(int level){
         int tilesPerRowIndex = Random.Range(0, 10);  
         return medium[tilesPerRowIndex];
     }
-    else{
+    else if(level == 2){
         int tilesPerRowIndex = Random.Range(0, 10);  
         return hard[tilesPerRowIndex];
+    }
+    else{
+        int tilesPerRowIndex = Random.Range(0, 10);  
+        return hell[tilesPerRowIndex];
     }
 
       //Return the tiles per row.
@@ -234,20 +257,25 @@ public void PlacePianoTile(int index){
         CreatePianoTile();
     }
 
+    
+
     public void OnClickTile(int i){
         if (this.grids[Const.RowNum-1][i].IsHavePianoTile()){
+            //pressSource.PlayOneShot(pressClip);
             currentScore++;
+            tileClearSound.Play();
             PianoTile pianoTile = this.grids[Const.RowNum-1][i].GetPianoTile();
             this.grids[Const.RowNum-1][i].SetPianoTile(null);
             pianoTile.SetGrid(null);
             GameObject.Destroy(pianoTile.gameObject);
             Debug.Log("destoryed Tiletype : " + (PlayerKeyType) i);
+
         }
     }
 
     void Update()
     {
-        if ( (!gameFinished) && (timer > 1)) // this is in seconds (1/speed)
+        if ( (!gameFinished) && (timer > speed)) // this is in seconds (1/speed)
         {
          //Do Stuff
             timer = 0;

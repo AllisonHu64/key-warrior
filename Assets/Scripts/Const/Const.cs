@@ -11,7 +11,7 @@ public class Const
     public static Dictionary<string,int> GameLevelStartSpeedDict = new Dictionary<string,int>(){
         {"easy", 1},
         {"medium", 2},
-        {"hard", 3}
+        {"hard", 3}  //the higher the integer the faster the difficulty progress.
     };
 
     public int CurrentSpeed = 1;

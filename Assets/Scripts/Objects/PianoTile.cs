@@ -49,8 +49,7 @@ public class PianoTile : MonoBehaviour
 
     public void MoveToGrid(MyGrid myGrid){
         transform.SetParent(myGrid.transform);
-        startMovePos = transform.position;
-        endMovePos = myGrid.transform.position;
+        startMovePos = transform.localPosition;
         isMoving = true;
         movePosTime = 0;
         
@@ -113,7 +112,7 @@ public class PianoTile : MonoBehaviour
         if (isMoving){
             if (movePosTime <= 1){
                 movePosTime += Time.deltaTime*4;
-                transform.position = Vector3.Lerp(startMovePos,endMovePos, movePosTime);
+                transform.localPosition = Vector3.Lerp(startMovePos,Vector3.zero, movePosTime);
             }
             else{
                 isMoving = false;
