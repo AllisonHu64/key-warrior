@@ -9,9 +9,9 @@ public class Const
     public const string Music = "music";
 
     public static Dictionary<string,int> GameLevelStartSpeedDict = new Dictionary<string,int>(){
-        {"easy", 3},
+        {"easy", 1},
         {"medium", 2},
-        {"hard", 1}
+        {"hard", 3}
     };
 
     public int CurrentSpeed = 1;
