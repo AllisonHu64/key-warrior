@@ -5,32 +5,44 @@ using UnityEngine.UI;
 
 public class PianoTile : MonoBehaviour
 { 
+    // background image
     private Image bg;
 
-    private GameObject myPanel;    
-    private GamePanel myGame;
-
+    // the grid that the piano tile is on
     private MyGrid parentGrid;
+
+    // the duration of spawn animation
     private float spawnScaleTime = 1;
+
+    // control (TODO: use unity animation)
     private bool isPlayingSpawnAnim = false;
+
+    // the duration of clearing tile animation (not implemented)
     private float clickedScaleTime = 1;
     private float clickedScaleTimeBack = 1;
-    
+
+    // control for runing clearing animation    
     private bool isPlayingClickedAnim = false;
 
+    // duration of moving animation
     private float movePosTime = 1;
+
+    // control for moving tile animation
     private bool isMoving = false;
+
+    // startMovePos and endMovePos (for moving tiles)
     private Vector3 startMovePos, endMovePos;
 
+    // list of available background sprites
     public Sprite[] bg_sprites = new Sprite[Const.ColumnNum];
 
 
+    // life cycle function
     private void Awake() {
         bg = transform.GetComponent<Image>();
-        myPanel = GameObject.Find("GamePanel");
-        myGame = myPanel.GetComponent<GamePanel>();
     }
-    // initialize
+
+    // initialize the piano tile
     public void Init(MyGrid myGrid, PlayerKeyType pkt){
         myGrid.SetPianoTile(this);
         this.SetGrid(myGrid);
@@ -77,11 +89,18 @@ public class PianoTile : MonoBehaviour
         movePosTime = 0;
     }
 
+    // life cycle function 
     private void Update() {
+        float speed = PlayerPrefs.GetFloat(Const.GameSpeed, 1);
+
         if (isPlayingSpawnAnim){
             // spawn animation slowest 1s
             if (spawnScaleTime <= 1){ // change this value if you want the slowest speed
-                spawnScaleTime += Time.deltaTime * (1/myGame.speed); // 4(speed) is the speed value 1/4 seconds
+
+                spawnScaleTime += Time.deltaTime * (4/speed);
+                // 2 means the animation ends in 1/2 seconds
+                // 4 means the animation ends in 1/4 sencinds
+                // 1/4 means the animation ends in 4 seconds
                 transform.localScale = Vector3.Lerp(Vector3.zero,Vector3.one, spawnScaleTime);
             }
             else{
@@ -93,13 +112,13 @@ public class PianoTile : MonoBehaviour
         if (isPlayingClickedAnim){
             // merge animation, go big
             if (clickedScaleTime <= 1 && clickedScaleTimeBack == 0){
-                clickedScaleTime += Time.deltaTime * 1;
+                clickedScaleTime += Time.deltaTime * 1/speed;
                 transform.localScale = Vector3.Lerp(Vector3.one,Vector3.one*1.2f, clickedScaleTime);
             }
 
             // merge animation, go back to normal
             if (clickedScaleTime >= 1 && clickedScaleTimeBack <= 1){
-                clickedScaleTimeBack += Time.deltaTime * 1;
+                clickedScaleTimeBack += Time.deltaTime * 1/speed;
                 transform.localScale = Vector3.Lerp(Vector3.one*1.2f,Vector3.one, clickedScaleTimeBack);
             }
             
@@ -111,7 +130,7 @@ public class PianoTile : MonoBehaviour
 
         if (isMoving){
             if (movePosTime <= 1){
-                movePosTime += Time.deltaTime*4;
+                movePosTime += Time.deltaTime*4/speed;
                 transform.localPosition = Vector3.Lerp(startMovePos,Vector3.zero, movePosTime);
             }
             else{

@@ -14,6 +14,8 @@ public class Const
         {"hard", 3}  //the higher the integer the faster the difficulty progress.
     };
 
+    public const string GameSpeed = "game_speed";
+
     public int CurrentSpeed = 1;
 
     public const string BestScore = "best_score";

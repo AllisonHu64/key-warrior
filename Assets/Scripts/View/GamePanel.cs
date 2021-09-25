@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 public class GamePanel : MonoBehaviour
 {
     public Text text_score; // current score
+
     public Text text_best_score; // best score
 
     public LosePanel losePanel;
@@ -22,26 +24,28 @@ public class GamePanel : MonoBehaviour
 
     private int col; // number of columns
 
-
-
     public GameObject tilePrefab;
+
     public GameObject pianoTilePrefab;
+
     public float timer = 1;
 
     public List<MyGrid> canCreatePianoTileGrid = new List<MyGrid>();
 
     public MyGrid[][] grids = null; // save all the generated grids
 
-    public int tilesPlayed;
-    public float speed;
+    public int rowsPlayed;
 
     private bool gameFinished = false;
 
     private int currentScore = 0;
+
     private int bestScore = 0;
 
     public AudioSource gameMusic;
+
     public AudioSource gameOverMusic;
+
     public AudioSource tileClearSound;
 
     //public AudioSource pressSource;
@@ -56,7 +60,7 @@ public class GamePanel : MonoBehaviour
     public void OnRestartClick(){
         gameMusic.Stop();
         gameMusic.Play();
-        tilesPlayed = 0;
+        rowsPlayed = 0;
         gameFinished = false;
         currentScore = 0;
         ClearAllPianoTiles();
@@ -122,108 +126,84 @@ public class GamePanel : MonoBehaviour
         }
     }
 
-public void CreatePianoTile(){
-               //Randomly choose one of the elements  
-        int tilesPerRow = RandomizerProbability();      //The int at the element is tile per row.
-
-        if(tilesPerRow > 0){                                  //If tilesPerRow is more than 0 than we make a tile
-            var tilesIndexes = new List<int>();               //Create an array list to store positions with tiles
-            int index = Random.Range(0, col);                 //Since there is definetly a tile, than we get an index for it
-            tilesIndexes.Add(index);                          //And we store it. 
-
-            int i = 1;                                        // init while loop
-            while(i < tilesPerRow){                           //if there is one tile per row, we already made it, no need to need to make more. 
-                int newIndex = Random.Range(0, col);          //we get a random index for a new tile
-                if(!tilesIndexes.Contains(newIndex)){         // check to make sure it doesnt overlap
-                    tilesIndexes.Add(newIndex);               //store the new index
-                    i++;                                      //iterate next loop
-                }  
-            }
-            for(int j = 0; j < tilesIndexes.Count; j++)       //Now we print the tiles at the indexes.
-            {          
-                PlacePianoTile(tilesIndexes[j]);
-            }
+    public void CreatePianoTile(){
+        // Randomly choose one of the elements 
+        int tilesPerRow = RandomizerProbability();      // The int at the element is tile per row.
+        IEnumerable<int> tileList = Enumerable.Range(1, col).OrderBy(x => Random.value).Take(tilesPerRow);
+        // generate the a list of indexs
+        foreach (int tileIndex in tileList)
+        {
+            PlacePianoTile(tileIndex);
         }
+
     } 
+    public int RandomizerProbability(){
+        /*Probability Ratios {zeroTile, oneTile, twoTiles, threeTiles}
+        int[] easy = {2,1,7,0};
+        int[] medium = {1,5,3,1};
+        int[] hard = {0,3,1,6}; */
 
-public int RandomizerProbability(){
-    /*Probability Ratios {zeroTile, oneTile, twoTiles, threeTiles}
-    int[] easy = {2,1,7,0};
-    int[] medium = {1,5,3,1};
-    int[] hard = {0,3,1,6}; */
+        string currentUserLevel = PlayerPrefs.GetString(Const.GameLevel, "easy");
+        int multiplier = Const.GameLevelStartSpeedDict[currentUserLevel];
 
-    string currentUserLevel = PlayerPrefs.GetString(Const.GameLevel, "easy");
-    int multiplier = Const.GameLevelStartSpeedDict[currentUserLevel];
-
-    if(tilesPlayed < (30 / multiplier)){                  //After 120 tilesPlayed
-        speed = 1;
-        Debug.Log("easy");
-        return probabilityGenrtr(0);     //Release the tiles per row. 
-    }
-    else if(tilesPlayed < (60 / multiplier)){
-        Debug.Log("medium");
-        speed = 0.85f;
-        return probabilityGenrtr(1);
-    }
-    else if(tilesPlayed < (100/ multiplier)){
-        Debug.Log("hard");
-        speed = 0.75f;
-        return probabilityGenrtr(2);
-    }
-    else{
-        Debug.Log("hell");
-        speed = 0.5f;
-        return probabilityGenrtr(3);
-    }
-}
-
-public int probabilityGenrtr(int level){
-    int[] easy = {0,0,0,1,1,1,1,1,1,1};
-    int[] medium = {0,0,1,1,1,1,1,2,2,0};
-    int[] hard = {0,0,0,1,1,1,1,2,3,3};
-    int[] hell = {1,1,2,2,2,2,3,3,3,3};
-    if(level == 0){
-        int tilesPerRowIndex = Random.Range(0, 10);  
-        return easy[tilesPerRowIndex];
-    }
-    else if(level == 1){
-        int tilesPerRowIndex = Random.Range(0, 10);  
-        return medium[tilesPerRowIndex];
-    }
-    else if(level == 2){
-        int tilesPerRowIndex = Random.Range(0, 10);  
-        return hard[tilesPerRowIndex];
-    }
-    else{
-        int tilesPerRowIndex = Random.Range(0, 10);  
-        return hell[tilesPerRowIndex];
+        if(rowsPlayed < (30 / multiplier)){                  //After 120 rowsPlayed
+            PlayerPrefs.SetFloat(Const.GameSpeed, 1);
+            Debug.Log("easy");
+            return probabilityGenrtr(0);     //Release the tiles per row. 
+        }
+        else if(rowsPlayed < (60 / multiplier)){
+            Debug.Log("medium"); 
+            PlayerPrefs.SetFloat(Const.GameSpeed, 0.85f);
+            return probabilityGenrtr(1);
+        }
+        else if(rowsPlayed < (100/ multiplier)){
+            Debug.Log("hard");
+            PlayerPrefs.SetFloat(Const.GameSpeed, 0.75f);
+            return probabilityGenrtr(2);
+        }
+        else{
+            Debug.Log("hell");
+            PlayerPrefs.SetFloat(Const.GameSpeed, 0.5f);
+            return probabilityGenrtr(3);
+        }
     }
 
-      //Return the tiles per row.
-}
+    // to do should add constants to const file
+    public int probabilityGenrtr(int level){
+        int tilesPerRowIndex = Random.Range(0,10);
+        if(level == 0){  
+            return tilesPerRowIndex >= 3 ? 1 : 0;
+        }
+        else if(level == 1){
+            return (tilesPerRowIndex >= 3 ? 1 : 0) + (tilesPerRowIndex >= 8 ? 1 : 0);
+        }
+        else if(level == 2){
+            return (tilesPerRowIndex >= 3 ? 1 : 0) + (tilesPerRowIndex >= 7 ? 1 : 0) + (tilesPerRowIndex >= 8 ? 1 : 0);
+        }
+        else{
+            return 1 + (tilesPerRowIndex >= 2 ? 1 : 0) + (tilesPerRowIndex >= 6 ? 1 : 0);
+        }
+    // Return the tiles per row.
+    }
 
-public void PlacePianoTile(int index){
-    GameObject gameObject = GameObject.Instantiate(pianoTilePrefab,canCreatePianoTileGrid[index].transform);
-    gameObject.GetComponent<PianoTile>().Init(canCreatePianoTileGrid[index], (PlayerKeyType)index);
-}
+    public void PlacePianoTile(int index){
+        GameObject gameObject = GameObject.Instantiate(pianoTilePrefab,canCreatePianoTileGrid[index].transform);
+        gameObject.GetComponent<PianoTile>().Init(canCreatePianoTileGrid[index], (PlayerKeyType)index);
+    }
 
     private void Awake() {
         // initate grid
         InitGrid();
         InitCanCreateTileGrid();
         CreatePianoTile();
-        speed = 1;
-        tilesPlayed = 0;
+        rowsPlayed = 0;
         bestScore = PlayerPrefs.GetInt(Const.BestScore,0);
         text_best_score.text = PlayerPrefs.GetInt(Const.BestScore, 0).ToString();
     }
-    public void automate(){
-        
-    }
 
-
+    // move all the piano tiles go down by one
     public void MoveDown(){
-        tilesPlayed++;
+        rowsPlayed++;
         for(int i = row-1; i >=0; i --){
             for(int j = col-1; j >= 0; j--){
                 this.grids[i][j].SetMyGridColor(new Color(0,0,0,0));
@@ -257,8 +237,7 @@ public void PlacePianoTile(int index){
         CreatePianoTile();
     }
 
-    
-
+    // clearing tiles
     public void OnClickTile(int i){
         if (this.grids[Const.RowNum-1][i].IsHavePianoTile()){
             //pressSource.PlayOneShot(pressClip);
@@ -275,22 +254,26 @@ public void PlacePianoTile(int index){
 
     void Update()
     {
-        if ( (!gameFinished) && (timer > speed)) // this is in seconds (1/speed)
+        float speed = PlayerPrefs.GetFloat(Const.GameSpeed, 1);
+
+        // rolling grid
+        if ( (!gameFinished) && (timer > speed)) // this is in seconds
         {
-         //Do Stuff
             timer = 0;
             MoveDown();
         }
         timer += UnityEngine.Time.deltaTime;
 
+        // clearing keys
         for(int i = 0; (i < Const.ColumnNum) && (!gameFinished); i ++){
             if (Input.GetKeyUp(Const.KeyPressList[i]))
             {
+                // clear keys
                 OnClickTile(i);
-
             }
         }
 
+        // set best score
         text_score.text = currentScore.ToString();
         bestScore = PlayerPrefs.GetInt(Const.BestScore,0);
         if (bestScore < currentScore){
